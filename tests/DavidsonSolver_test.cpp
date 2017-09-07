@@ -8,60 +8,24 @@
 #include "davidson.hpp"
 
 
-/*BOOST_AUTO_TEST_CASE( constructor ) {
-
-    // DavidsonSolver can't accept a non-symmetric matrix
+BOOST_AUTO_TEST_CASE( constructor ) {
     int dim = 5;
+    unsigned n = 1;
+    double tol = 0.001;
     Eigen::MatrixXd X = Eigen::MatrixXd::Random(dim, dim);
-    BOOST_CHECK_THROW(DavidsonSolver ds1 (X), std::invalid_argument);
-
-    // DavidsonSolver should accept symmetric matrices
     Eigen::MatrixXd XT = X.transpose();
     Eigen::MatrixXd S = 0.5 * (X + XT);
-    BOOST_CHECK_NO_THROW(DavidsonSolver ds2 (S));
 
+    // Test if DavidsonSolver refuses to accept a non-symmetric matrix
+    BOOST_CHECK_THROW(DavidsonSolver ds1 (X, n, tol), std::invalid_argument);
+
+    // Test if DavidsonSolver accepts symmetric matrices
+    BOOST_CHECK_NO_THROW(DavidsonSolver ds2 (S, n, tol));
 }
-*/
-
-/*BOOST_AUTO_TEST_CASE( random_solver ) {
-
-    // Joshua Goings has a nice Python example concerning the Davidson algorithm
-    // http://joshuagoings.com/2013/08/23/davidsons-method/
-
-    // Let's make a diagonally dominant matrix, but random matrix
-    int dim = 10;
-    Eigen::MatrixXd A (dim, dim);
-
-    // We put i+1 on the diagonal
-    for (int i = 0; i < dim; i++) {
-        A(i, i) = i + 1;
-    }
-
-    // We add some random, but small noise
-    Eigen::MatrixXd N = Eigen::MatrixXd::Random(dim, dim);
-    double factor = 0.01;
-    A += factor * N;
-
-    // And finally, we symmetrize
-    Eigen::MatrixXd AT = A.transpose();    // Aliasing issue, don't put [auto AT=A.transpose()]
-    A = 0.5 * (A + AT);
-
-
-    // Now it's time to solve the eigensystem for A, using EigenSolver
-    Eigen::EigenSolver<Eigen::MatrixXd> es (A);
-    // std::cout << "A eigenvalues" << std::endl << es.eigenvalues() << std::endl << std::endl;
-    // std::cout << "A eigenvectors" << std::endl << es.eigenvectors() << std::endl << std::endl;
-
-
-    // Now we have to test if my Davidson solver gives the same results
-    // DavidsonSolver ds (A);
-    // ds.solve();
-
-}*/
 
 
 BOOST_AUTO_TEST_CASE( esqc_example_solver ){
-
+    // We can find the following example at (http://www.esqc.org/static/lectures/Malmqvist_2B.pdf)
     // Build up the example matrix
     Eigen::MatrixXd A = Eigen::MatrixXd::Constant(5, 5, 0.1);
     A(0,0) = 1.0;
@@ -70,12 +34,65 @@ BOOST_AUTO_TEST_CASE( esqc_example_solver ){
     A(3,3) = 3.0;
     A(4,4) = 3.0;
 
-    // Solve using SelfAdjointEigenSolver
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> saes (A);
-    std::cout << "eigenvalues" << std::endl << saes.eigenvalues() << std::endl << std::endl;
-    std::cout << "eigenvectors" << std::endl << saes.eigenvectors() << std::endl << std::endl;
+    // The solutions to the problem are given in the example
+    Eigen::VectorXd eval_ex (1);
+    eval_ex << 0.979;
+    Eigen::MatrixXd evec_ex (5, 1);
+    evec_ex << 0.994, -0.083, -0.042, -0.042, -0.042;
+
+    std::cout << "eval_ex" << std::endl << eval_ex << std::endl << std::endl;
+    std::cout << "evec_ex" << std::endl << evec_ex << std::endl << std::endl;
 
     // Solve using the Davidson diagonalization
-    DavidsonSolver ds (A);
+    unsigned n = 1;
+    double tol = 0.05;
+    DavidsonSolver ds (A, n, tol);
+    ds.solve();
+    auto eval_d = ds.eigenvalues();
+    auto evec_d = ds.eigenvectors();
+
+    // Test if the example solutions are equal to the Davidson solutions
+    auto difference = evec_d - evec_ex;
+    auto sum = evec_d + evec_ex;
+    Eigen::MatrixXd zeroM = Eigen::MatrixXd::Zero(5, 1);
+
+    BOOST_CHECK(eval_d.isApprox(eval_ex, 0.1));
+    BOOST_CHECK(evec_d.isApprox(evec_ex, 0.1) || evec_d.isApprox(-evec_ex, 0.1));
+}
+
+
+/*BOOST_AUTO_TEST_CASE( random_solver ) {
+    // Joshua Goings has a nice Python example concerning the Davidson algorithm
+    // http://joshuagoings.com/2013/08/23/davidsons-method/
+
+    // Let's make a diagonally dominant, but random matrix
+    int dim = 10;
+    Eigen::MatrixXd A (dim, dim);
+
+    // First, we put i+1 on the diagonal
+    for (int i = 0; i < dim; i++) {
+        A(i, i) = i + 1;
+    }
+
+    // Then, we add some random, but small noise
+    Eigen::MatrixXd N = Eigen::MatrixXd::Random(dim, dim);
+    double factor = 0.01;
+    A += factor * N;
+
+    // Finally, we symmetrize
+    Eigen::MatrixXd AT = A.transpose();    // Aliasing issue, don't put [auto AT=A.transpose()]
+    A = 0.5 * (A + AT);
+
+
+    // Now it's time to solve the eigensystem for A, using eigen3's SelfAdjointEigenSolver
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es (A);
+
+
+    // Now we have to test if my Davidson solver gives the same results
+    int n = 3;
+    double tol = 0.0001
+    DavidsonSolver ds (A, n, tol);
     ds.solve();
 }
+*/
+

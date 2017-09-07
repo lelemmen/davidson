@@ -9,17 +9,23 @@ bool is_symmetric(Eigen::MatrixXd& A) {
 }
 
 
-/** Constructor based on a given symmetric matrix A
+/** Constructor based on a given symmetric matrix A, number of requested eigenparis and tolerance
  *
  * @param A:    the matrix that will be diagonalized
+ * @param n:    the number of requested eigenpairs
+ * @param tol:  the given tolerance (norm of the residual vector) for iteration termination
  */
-DavidsonSolver::DavidsonSolver(Eigen::MatrixXd& A) {
+DavidsonSolver::DavidsonSolver(Eigen::MatrixXd& A, unsigned& n, double& tol) {
     // If the given matrix is not symmetric, throw an exception
     if (!is_symmetric(A)) {
         throw std::invalid_argument("Given matrix is not symmetric.");
     } else {
         this->A = A;
-        this->dim = A.cols();
+        this->dim = A.rows();
+
+        this->tol = tol;
+        this->eigenvalues_ = Eigen::VectorXd::Zero(n);       // initialize the eigenvalues and eigenvectors to zero
+        this->eigenvectors_ = Eigen::MatrixXd::Zero(this->dim, n);
     }
 }
 
@@ -44,7 +50,8 @@ void DavidsonSolver::solve() {
     // Calculate the first residual r
     Eigen::VectorXd r = (this->A) * x - lambda * x;
 
-    for (int k = 2; k <= 3; k++) {
+    unsigned k=1;
+    while (r.norm() > this->tol) {
         // A'
         Eigen::MatrixXd A_ = (this->A).diagonal().asDiagonal();
 
@@ -64,7 +71,7 @@ void DavidsonSolver::solve() {
         // Expanding the subspace
         Eigen::VectorXd s = (Eigen::MatrixXd::Identity(this->dim, this->dim) - V * V.transpose()) * dv;
         Eigen::VectorXd v = s / s.norm();
-        V.col(k-1) = v;
+        V.col(k) = v;
 
         // Diagonalize S. Since it's symmetric, we can use the SelfAdjointEigenSolver
         Eigen::MatrixXd S = V.transpose() * (this->A) * V;
@@ -80,17 +87,24 @@ void DavidsonSolver::solve() {
         lambda = saes.eigenvalues()(min_index);
         Eigen::MatrixXd evec = saes.eigenvectors();
         Eigen::VectorXd t = evec.col(min_index);
-        Eigen::VectorXd x = V * t;
+        x = V * t;
 
         // Re-calculate the residue
         r = (this->A) * x - lambda * x;
     }
+    std::cout << "lambda" << std::endl << lambda << std::endl << std::endl;
+    std::cout << "x" << std::endl << x << std::endl << std::endl;
+
+    // After convergence, set the eigenvalue(s) and eigenvector(s) in the DavidsonSolver instance
+    this->eigenvalues_(0) = lambda;
+    this->eigenvectors_.col(0) = x;
+}
 
 
+Eigen::VectorXd DavidsonSolver::eigenvalues() {
+    return this->eigenvalues_;
+}
 
-
-
-
-
-
+Eigen::MatrixXd DavidsonSolver::eigenvectors() {
+    return this->eigenvectors_;
 }

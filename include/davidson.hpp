@@ -25,12 +25,11 @@ public:
 
     /** Constructor based on a given symmetric matrix A
      *
-     * @param A:    the given matrix
+     * @param A:    the matrix that will be diagonalized
      */
     DavidsonSolver(Eigen::MatrixXd& A);
 
     /** Diagonalize the initialized matrix with Davidson's method
-     *
      */
     void solve();
 };

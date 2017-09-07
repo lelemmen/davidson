@@ -36,7 +36,8 @@ void DavidsonSolver::solve() {
 
     // For now, we do maximum three iterations
     //      This means that we start with x1=e1 and add an orthogonal vector twice
-    Eigen::MatrixXd V = Eigen::MatrixXd::Zero(this->dim, 3);
+    long subspace_dim = 3;
+    Eigen::MatrixXd V = Eigen::MatrixXd::Zero(this->dim, subspace_dim);
 
     // x1=e1
     Eigen::VectorXd x = Eigen::VectorXd::Unit(this->dim, 0);
@@ -71,14 +72,14 @@ void DavidsonSolver::solve() {
         // Expanding the subspace
         Eigen::VectorXd s = (Eigen::MatrixXd::Identity(this->dim, this->dim) - V * V.transpose()) * dv;
         Eigen::VectorXd v = s / s.norm();
-        V.col(k) = v;
+        V.col(k % subspace_dim) = v;
 
         // Diagonalize S. Since it's symmetric, we can use the SelfAdjointEigenSolver
         Eigen::MatrixXd S = V.transpose() * (this->A) * V;
         Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> saes (S);
 
         // Find the appropriate Ritz pair (eigenvalue closest to lambda)
-        Eigen::VectorXd lambdas = lambda * Eigen::VectorXd::Ones(3);      // We're in this example looking at a three-dimensional subspace
+        Eigen::VectorXd lambdas = lambda * Eigen::VectorXd::Ones(subspace_dim);      // We're in this example looking at a three-dimensional subspace
         Eigen::MatrixXd::Index min_index;
         Eigen::VectorXd diff = saes.eigenvalues() - lambdas;
         diff.cwiseAbs().minCoeff(&min_index);
@@ -91,9 +92,8 @@ void DavidsonSolver::solve() {
 
         // Re-calculate the residue
         r = (this->A) * x - lambda * x;
+        k++;
     }
-    std::cout << "lambda" << std::endl << lambda << std::endl << std::endl;
-    std::cout << "x" << std::endl << x << std::endl << std::endl;
 
     // After convergence, set the eigenvalue(s) and eigenvector(s) in the DavidsonSolver instance
     this->eigenvalues_(0) = lambda;

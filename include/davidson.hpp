@@ -27,7 +27,7 @@ public:
     /** Constructor based on a given symmetric matrix A, number of requested eigenpairs and tolerance
      *
      * @param A:    the matrix that will be diagonalized
-     * @param n:    the number of requested eigenpairs
+     * @param n:    the number of requested eigenpairs (n lowest eigenvalues)
      * @param tol:  the given tolerance (norm of the residual vector) for iteration termination
      */
     DavidsonSolver(Eigen::MatrixXd& A, unsigned& n, double& tol);

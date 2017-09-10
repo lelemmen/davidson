@@ -66,37 +66,46 @@ BOOST_AUTO_TEST_CASE( esqc_example_solver ){
 }
 
 
-BOOST_AUTO_TEST_CASE( random_solver ) {
-    // Joshua Goings has a nice Python example concerning the Davidson algorithm
-    // http://joshuagoings.com/2013/08/23/davidsons-method/
+BOOST_AUTO_TEST_CASE( liu_example ){
+
+    
+
+}
+
+/*
+BOOST_AUTO_TEST_CASE( bigger_example_three ) {
 
     // Let's make a diagonally dominant, but random matrix
-    int dim = 10;
-    Eigen::MatrixXd A (dim, dim);
+    int dim = 15;
+    Eigen::MatrixXd A = Eigen::MatrixXd::Constant(dim, dim, 0.1);
 
     // First, we put i+1 on the diagonal
     for (int i = 0; i < dim; i++) {
         A(i, i) = i + 1;
     }
 
-    // Then, we add some random, but small noise
-    Eigen::MatrixXd N = Eigen::MatrixXd::Random(dim, dim);
-    double factor = 0.01;
-    A += factor * N;
-
-    // Finally, we symmetrize
-    Eigen::MatrixXd AT = A.transpose();    // Aliasing issue, don't put [auto AT=A.transpose()]
-    A = 0.5 * (A + AT);
-
-
-    // Now it's time to solve the eigensystem for A, using eigen3's SelfAdjointEigenSolver
+    // Now it's time to solve the eigensystem for S
+    // Afterwards, select the 3 lowest eigenpairs
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es (A);
+    auto evals_ex = es.eigenvalues();
+    evals_ex = evals_ex.head(3);    // can't do this in the previous line; eigenvalues is const
+    auto evecs_ex = es.eigenvectors();
+    evecs_ex = evecs_ex.topLeftCorner(dim, 3);
 
+    std::cout << "evals ex" << std::endl << evals_ex << std::endl << std::endl;
+    std::cout << "evecs ex" << std::endl << evecs_ex << std::endl << std::endl;
 
     // Now we have to test if my Davidson solver gives the same results
     unsigned n = 3;
     double tol = 0.0001;
     DavidsonSolver ds (A, n, tol);
     ds.solve();
-}
 
+    auto evals_d = ds.eigenvalues();
+    auto evecs_d = ds.eigenvectors();
+
+    std::cout << "evals d" << std::endl << evals_d << std::endl << std::endl;
+    std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
+
+}
+*/

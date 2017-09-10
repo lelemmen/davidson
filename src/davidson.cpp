@@ -9,10 +9,10 @@ bool is_symmetric(Eigen::MatrixXd& A) {
 }
 
 
-/** Constructor based on a given symmetric matrix A, number of requested eigenparis and tolerance
+/** Constructor based on a given symmetric matrix A, number of requested eigenpairs and tolerance
  *
  * @param A:    the matrix that will be diagonalized
- * @param n:    the number of requested eigenpairs
+ * @param n:    the number of requested eigenpairs (n lowest eigenvalues)
  * @param tol:  the given tolerance (norm of the residual vector) for iteration termination
  */
 DavidsonSolver::DavidsonSolver(Eigen::MatrixXd& A, unsigned& n, double& tol) {
@@ -52,10 +52,11 @@ void DavidsonSolver::solve() {
     Eigen::VectorXd r = (this->A) * x - lambda * x;
 
     unsigned k=1;
-    while (r.norm() > this->tol) {
+    while ((r.norm() > this->tol) && (k < 5)) {
         // A'
         Eigen::MatrixXd A_ = (this->A).diagonal().asDiagonal();
 
+        // FIXME: I can do this in an ::ArrayXd easily
         // Preconditioning step
         // Solve residual equation B dv = -r
         Eigen::MatrixXd B = (A_ - lambda * Eigen::MatrixXd::Identity(this->dim, this->dim));
@@ -70,6 +71,7 @@ void DavidsonSolver::solve() {
         }
 
         // Expanding the subspace
+        // FIXME: I don't think I should be replacing vectors: look at Davidson-Liu
         Eigen::VectorXd s = (Eigen::MatrixXd::Identity(this->dim, this->dim) - V * V.transpose()) * dv;
         Eigen::VectorXd v = s / s.norm();
         V.col(k % subspace_dim) = v;
@@ -93,6 +95,12 @@ void DavidsonSolver::solve() {
         // Re-calculate the residue
         r = (this->A) * x - lambda * x;
         k++;
+
+
+
+        std::cout << "k: " << k << std::endl << std::endl;
+        std::cout << "residue norm" << std::endl << r.norm() << std::endl;
+        std::cout << "current eigenvector approximation" << std::endl << x << std::endl << std::endl;
     }
 
     // After convergence, set the eigenvalue(s) and eigenvector(s) in the DavidsonSolver instance

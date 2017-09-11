@@ -1,118 +1,149 @@
 #include "davidson.hpp"
 #include <iostream>
 
-/** Checks whether a given matrix is symmetric or not
+/** Checks whether a given square matrix is symmetric (A=AT) or not
  */
 bool is_symmetric(Eigen::MatrixXd& A) {
-    auto AT = A.transpose();
+    Eigen::MatrixXd AT = A.transpose();
     return A.isApprox(AT);
 }
+
+
+/** Return the n lowest eigenvalues of a saes (SelfAdjointEigenSolver)
+ */
+Eigen::VectorXd lowest_evals(Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> &saes, unsigned &n) {
+    Eigen::VectorXd all_evals = saes.eigenvalues();
+    return all_evals.head(n);
+}
+
+/** Return the n lowest eigenvectors of a saes (SelfAdjointEigenSolver)
+*/
+Eigen::MatrixXd lowest_evecs(Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> &saes, unsigned &n) {
+    auto dim = saes.eigenvalues().rows();
+    Eigen::MatrixXd all_evecs = saes.eigenvectors();
+    return all_evecs.topLeftCorner(dim, n);
+}
+
 
 
 /** Constructor based on a given symmetric matrix A, number of requested eigenpairs and tolerance
  *
  * @param A:    the matrix that will be diagonalized
- * @param n:    the number of requested eigenpairs (n lowest eigenvalues)
+ * @param r:    the number of requested eigenpairs (n lowest eigenvalues)
  * @param tol:  the given tolerance (norm of the residual vector) for iteration termination
  */
-DavidsonSolver::DavidsonSolver(Eigen::MatrixXd& A, unsigned& n, double& tol) {
+DavidsonSolver::DavidsonSolver(Eigen::MatrixXd& A, unsigned& r, double& tol) {
     // If the given matrix is not symmetric, throw an exception
     if (!is_symmetric(A)) {
         throw std::invalid_argument("Given matrix is not symmetric.");
     } else {
         this->A = A;
         this->dim = A.rows();
+        this->r = r;
 
         this->tol = tol;
-        this->eigenvalues_ = Eigen::VectorXd::Zero(n);       // initialize the eigenvalues and eigenvectors to zero
-        this->eigenvectors_ = Eigen::MatrixXd::Zero(this->dim, n);
+        this->eigenvalues_ = Eigen::VectorXd::Zero(this->r);                // initialize the eigenvalues and eigenvectors to zero
+        this->eigenvectors_ = Eigen::MatrixXd::Zero(this->dim, this->r);
     }
 }
 
 /** Diagonalize the initialized matrix with Davidson's method
  */
 void DavidsonSolver::solve() {
-    // See (https://github.ugent.be/lelemmen/typesetting/tree/master/Mathemagics) for a mathematical explanation of Davidson's algorithm
+    // This solver will perform the Davidson-Liu algorithm. For a mathematical explanation, see
+    //      (https://github.ugent.be/lelemmen/typesetting/tree/master/Mathemagics).
 
-    // For now, we do maximum three iterations
-    //      This means that we start with x1=e1 and add an orthogonal vector twice
-    long subspace_dim = 3;
-    Eigen::MatrixXd V = Eigen::MatrixXd::Zero(this->dim, subspace_dim);
 
-    // x1=e1
-    Eigen::VectorXd x = Eigen::VectorXd::Unit(this->dim, 0);
+    // 1. Start with a set of L orthonormalized guess vectors
+    //      L will be the dimension of the subspace in which we will diagonalize
+    //      FIXME: for now, we start with sqrt(dim)
+    Eigen::MatrixXd W = Eigen::MatrixXd::Identity(this->dim, this->dim);      // W is an auxiliary matrix that can be used to expand V
+    long L = static_cast<unsigned>(sqrt((this->dim)));
+    Eigen::MatrixXd V = W.topLeftCorner(this->dim, L);
 
-    // Append x1 to V
-    V.col(0) = x;
+    auto converged = false;
+    while (!converged) {
+        // 2. Construct the subspace matrix
+        Eigen::MatrixXd S = V.transpose() * (this->A) * V;
 
-    // Calculate lambda
-    double lambda = x.transpose() * (this->A) * x;
 
-    // Calculate the first residual r
-    Eigen::VectorXd r = (this->A) * x - lambda * x;
+        // 3. Diagonalize that subspace matrix
+        //      i.e. find the r lowest eigenvalues and their corresponding eigenvectors
+        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> saes (S);
+        Eigen::VectorXd Lambda = lowest_evals(saes, this->r);
+        Eigen::MatrixXd Z = lowest_evecs(saes, this->r);
 
-    unsigned k=1;
-    while ((r.norm() > this->tol) && (k < 5)) {
-        // A'
-        Eigen::MatrixXd A_ = (this->A).diagonal().asDiagonal();
 
-        // FIXME: I can do this in an ::ArrayXd easily
-        // Preconditioning step
-        // Solve residual equation B dv = -r
-        Eigen::MatrixXd B = (A_ - lambda * Eigen::MatrixXd::Identity(this->dim, this->dim));
+        // 4. Construct current eigenvector estimates
+        Eigen::MatrixXd X = V * Z;
 
-        Eigen::VectorXd dv = B.householderQr().solve(r);  // Maybe I could invert the diagonal matrix B myself
-        // This is actually element-wise division
-        // Check if lambda is approximately equal to a diagonal element and if so, set the correction = 0
-        for (int i = 0; i < this->dim; i++) {
-            if (this->A(i, i) == lambda) {   // Check if close to zero
-                dv(i) = 0;
+
+        // 5. Calculate residual vectors and the correction vectors ...
+        //      The residual vectors will be columns in the (this->dim)x(this->r)-matrix R
+        //      The (normalized) correction vectors will be columns in the (this->dim)x(this->r)-matrix Delta
+        Eigen::MatrixXd R = Eigen::MatrixXd::Zero(this->dim, this->r);
+        Eigen::MatrixXd Delta = Eigen::MatrixXd::Zero(this->dim, this->r);
+        for (unsigned col_index = 0; col_index < this->r; col_index++) {
+            R.col(col_index) = (this->A - Lambda(col_index) * Eigen::MatrixXd::Identity(this->dim, this->dim)) * X.col(col_index);
+
+            // (Coefficient-wise multiplication)
+            Eigen::VectorXd prefactor(this->dim);
+            for (unsigned i = 0; i < this->dim; i++) {
+                // If the prefactor (not inverted) tends to zero, set the prefactor to zero
+                if (std::abs(Lambda(col_index) - A(i, i)) < 0.1) {
+                    prefactor(i) = 0.0;
+                } else {
+                    prefactor(i) = 1 / (Lambda(col_index) - A(i, i));
+                }
+            }
+
+            // ... and normalize the correction vectors
+            Delta.col(col_index) = prefactor.cwiseProduct(R.col(col_index));
+            Delta.col(col_index).normalize();
+        }
+
+
+        // 6. Project the corrections on the orthogonal complement of the current subspace C(V) ...
+        for (unsigned col_index = 0; col_index < this->r; col_index++) {
+            Eigen::VectorXd q = (Eigen::MatrixXd::Identity(this->dim, this->dim) - V * V.transpose()) * Delta.col(col_index);
+            auto norm = q.norm();
+
+            // ... and if the norm is larger than a certain threshold, expand the subspace
+            if (norm > 0.001) {
+
+                // FIXME: work out the math on collapsing subspaces
+                if (L + 1 > this->dim) {
+                    throw std::range_error( "L got bigger than dim.");
+                }
+
+                Eigen::MatrixXd V_copy = V;
+                V = W.topLeftCorner(this->dim, ++L);      // Make V bigger by one column
+                V.topLeftCorner(this->dim, L-1) = V_copy;
+                V.col(L-1) = q / norm;     // Add the new orthonormalized correction
             }
         }
 
-        // Expanding the subspace
-        // FIXME: I don't think I should be replacing vectors: look at Davidson-Liu
-        Eigen::VectorXd s = (Eigen::MatrixXd::Identity(this->dim, this->dim) - V * V.transpose()) * dv;
-        Eigen::VectorXd v = s / s.norm();
-        V.col(k % subspace_dim) = v;
 
-        // Diagonalize S. Since it's symmetric, we can use the SelfAdjointEigenSolver
-        Eigen::MatrixXd S = V.transpose() * (this->A) * V;
-        Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> saes (S);
-
-        // Find the appropriate Ritz pair (eigenvalue closest to lambda)
-        Eigen::VectorXd lambdas = lambda * Eigen::VectorXd::Ones(subspace_dim);      // We're in this example looking at a three-dimensional subspace
-        Eigen::MatrixXd::Index min_index;
-        Eigen::VectorXd diff = saes.eigenvalues() - lambdas;
-        diff.cwiseAbs().minCoeff(&min_index);
-
-        // Find ritz pair
-        lambda = saes.eigenvalues()(min_index);
-        Eigen::MatrixXd evec = saes.eigenvectors();
-        Eigen::VectorXd t = evec.col(min_index);
-        x = V * t;
-
-        // Re-calculate the residue
-        r = (this->A) * x - lambda * x;
-        k++;
-
-
-
-        std::cout << "k: " << k << std::endl << std::endl;
-        std::cout << "residue norm" << std::endl << r.norm() << std::endl;
-        std::cout << "current eigenvector approximation" << std::endl << x << std::endl << std::endl;
+        // 7. Check for convergence before doing other calculations
+        //      If any of norms of the residuals isn't tolerated, the calculation isn't converged
+        converged = true;
+        for (unsigned col_index = 0; col_index < this->r; col_index++) {
+            if (R.col(col_index).norm() > tol) {
+                converged = false;
+            }
+        }
+        if (converged) {
+            this->eigenvalues_ = Lambda;
+            this->eigenvectors_ = X;
+        }
     }
-
-    // After convergence, set the eigenvalue(s) and eigenvector(s) in the DavidsonSolver instance
-    this->eigenvalues_(0) = lambda;
-    this->eigenvectors_.col(0) = x;
 }
 
 
 Eigen::VectorXd DavidsonSolver::eigenvalues() {
-    return this->eigenvalues_;
+    return (this->eigenvalues_);
 }
 
 Eigen::MatrixXd DavidsonSolver::eigenvectors() {
-    return this->eigenvectors_;
+    return (this->eigenvectors_);
 }

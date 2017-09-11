@@ -18,6 +18,8 @@ before_install:
 addons:
   apt:
     packages:
+      - gcc-4.8
+      - gfortran-4.8
       - libblas-dev
       - liblapack-dev
       - libboost-test-dev

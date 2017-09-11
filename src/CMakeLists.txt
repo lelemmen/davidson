@@ -9,5 +9,4 @@ add_library(davidson
 target_include_directories(davidson PRIVATE ../include)
 
 # We must include the eigen headers
-find_package(Eigen3 REQUIRED)
-target_include_directories(davidson PRIVATE ${EIGEN3_INCLUDE_DIRS})
+target_include_directories(davidson PRIVATE /opt/local/include/eigen3)

@@ -18,6 +18,8 @@ addons:
   apt:
     sources:
       - boost-latest
+    packages:
+      - libboost-all-dev
 
 install:
   - true

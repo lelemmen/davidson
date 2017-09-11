@@ -7,3 +7,4 @@ language: cpp
 
 notifications:
     slack: gqcg:13JQ7AAK5DMZPeAInhCMX6YJ
+    email: false

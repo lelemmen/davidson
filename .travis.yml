@@ -18,16 +18,16 @@ addons:
   apt:
     packages:
       - libboost-test-dev
-      - libeigen3-dev
+      # - libeigen3-dev
       #FIXME: can we do -libeigen3-dev to install eigen3?
 
 install:
   # Install Eigen3
-  # - hg clone https://bitbucket.org/eigen/eigen#3.2 /tmp/eigen
-  # - mkdir /tmp/eigen-build && cd /tmp/eigen-build
-  # - cmake . /tmp/eigen
-  # - make && sudo make install
-  # - cd -
+  - hg clone https://bitbucket.org/eigen/eigen#3.2 /tmp/eigen
+  - mkdir /tmp/eigen-build && cd /tmp/eigen-build
+  - cmake . /tmp/eigen
+  - make && sudo make install
+  - cd ..
 
 script:
   - mkdir build && cd build

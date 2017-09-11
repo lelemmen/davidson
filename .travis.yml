@@ -1,1 +1,4 @@
+os: osx
+osx_image: macosx10.12
+
 language: cpp

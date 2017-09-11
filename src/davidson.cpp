@@ -54,9 +54,8 @@ void DavidsonSolver::solve() {
     //      (https://github.ugent.be/lelemmen/typesetting/tree/master/Mathemagics).
 
 
-    // 1. Start with a set of L orthonormalized guess vectors
-    //      L will be the dimension of the subspace in which we will diagonalize
-    //      FIXME: for now, we start with sqrt(dim)
+    // 1. Start with a set of orthonormalized guess vectors
+    //      FIXME: Start with sqrt(dim) orthornormalized vectors, expand V up to L
     Eigen::MatrixXd W = Eigen::MatrixXd::Identity(this->dim, this->dim);      // W is an auxiliary matrix that can be used to expand V
     long L = static_cast<unsigned>(sqrt((this->dim)));
     Eigen::MatrixXd V = W.topLeftCorner(this->dim, L);

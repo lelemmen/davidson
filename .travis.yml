@@ -1,4 +1,6 @@
-os: linux
+dist: trusty
+sudo: false
+
 language: cpp
 compiler: clang
 notifications:
@@ -7,12 +9,12 @@ notifications:
 
 # Travis CI's CMake version is only 3.2.2. This is a workaround (https://github.com/travis-ci/travis-ci/issues/7437) that upgrades to a newer version of CMake
 # FIXME: can we use trusty to overwite this step?
-before_install:
-  - mkdir $HOME/usr
-  - export PATH="$HOME/usr/bin:$PATH"
-  - wget https://cmake.org/files/v3.9/cmake-3.9.1-Linux-x86_64.sh
-  - chmod +x cmake-3.9.1-Linux-x86_64.sh
-  - ./cmake-3.9.1-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir --skip-license
+#before_install:
+ # - mkdir $HOME/usr
+  #- export PATH="$HOME/usr/bin:$PATH"
+  #- wget https://cmake.org/files/v3.9/cmake-3.9.1-Linux-x86_64.sh
+  #- chmod +x cmake-3.9.1-Linux-x86_64.sh
+  #- ./cmake-3.9.1-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir --skip-license
 
 addons:
   apt:

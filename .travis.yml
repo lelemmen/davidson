@@ -31,4 +31,4 @@ script:
   - mkdir build && cd build
   - cmake ..
   - make
-  - ctest
+  - ./tests/davidson_test

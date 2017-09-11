@@ -13,7 +13,6 @@ before_install:
   - wget https://cmake.org/files/v3.9/cmake-3.9.1-Linux-x86_64.sh
   - chmod +x cmake-3.9.1-Linux-x86_64.sh
   - ./cmake-3.9.1-Linux-x86_64.sh --prefix=$HOME/usr --exclude-subdir --skip-license
-  - pwd
 
 addons:
   apt:
@@ -28,10 +27,9 @@ install:
   - mkdir /tmp/eigen-build && cd /tmp/eigen-build
   - cmake . /tmp/eigen
   - make && sudo make install
-  - pwd
-
 
 script:
+  - cd /home/travis/build/lelemmen/davidson
   - mkdir build && cd build
   - cmake ..
   - make && make test

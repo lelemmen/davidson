@@ -27,7 +27,7 @@ install:
   - mkdir /tmp/eigen-build && cd /tmp/eigen-build
   - cmake . /tmp/eigen
   - make && sudo make install
-  - cd
+  - cd ${HOME}/lelemmen/davidson
 
 script:
   - mkdir build && cd build

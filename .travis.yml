@@ -27,7 +27,7 @@ install:
   - mkdir /tmp/eigen-build && cd /tmp/eigen-build
   - cmake . /tmp/eigen
   - make && sudo make install
-  - cd ..
+  - cd
 
 script:
   - mkdir build && cd build

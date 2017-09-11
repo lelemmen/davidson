@@ -27,7 +27,6 @@ install:
   - mkdir /tmp/eigen-build && cd /tmp/eigen-build
   - cmake . /tmp/eigen -DCMAKE_INSTALL_PREFIX=/opt/local
   - make
-  - make check
   - sudo make install
 
 script:

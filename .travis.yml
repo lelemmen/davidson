@@ -30,4 +30,5 @@ script:
   - cd /home/travis/build/lelemmen/davidson
   - mkdir build && cd build
   - cmake ..
-  - make && make test
+  - make
+  - ctest

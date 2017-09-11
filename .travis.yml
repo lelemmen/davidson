@@ -24,7 +24,9 @@ install:
   - hg clone https://bitbucket.org/eigen/eigen#3.2 /tmp/eigen
   - mkdir /tmp/eigen-build && cd /tmp/eigen-build
   - cmake . /tmp/eigen -DCMAKE_INSTALL_PREFIX=/opt/local
-  - make && sudo make install
+  - make
+  - make check
+  - sudo make install
 
 script:
   - cd /home/travis/build/lelemmen/davidson

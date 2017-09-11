@@ -1,10 +1,12 @@
-os: osx
-osx_image: macosx10.12
-
+os: linux
 language: cpp
-
-
-
+compiler: clang
 notifications:
     slack: gqcg:13JQ7AAK5DMZPeAInhCMX6YJ
     email: false
+
+install:
+  - true
+
+script:
+  - make && make test

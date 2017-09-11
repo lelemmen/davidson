@@ -18,6 +18,8 @@ before_install:
 addons:
   apt:
     packages:
+      - libblas-dev
+      - liblapack-dev
       - libboost-test-dev
 
 install:

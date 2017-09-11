@@ -16,11 +16,8 @@ before_install:
 
 addons:
   apt:
-  # FIXME try to remove sources
-    #sources:
-     # - boost-latest
     packages:
-      - libboost-all-dev
+      - libboost-test-dev
 
 install:
   - true

@@ -107,6 +107,12 @@ BOOST_AUTO_TEST_CASE( bigger_example_three ) {
     Eigen::VectorXd evals_d = ds.eigenvalues();
     Eigen::MatrixXd evecs_d = ds.eigenvectors();
 
+    std::cout << "evals ex" << std::endl << evals_ex << std::endl << std::endl;
+    std::cout << "evecs ex" << std::endl << evecs_ex << std::endl << std::endl;
+
+    std::cout << "evals d" << std::endl << evals_d << std::endl << std::endl;
+    std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
+
     BOOST_CHECK(are_equal_evals(evals_d, evals_ex, tol));
     BOOST_CHECK(are_equal_evecs(evecs_d, evecs_ex, tol));
 }

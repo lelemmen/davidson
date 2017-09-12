@@ -62,8 +62,6 @@ BOOST_AUTO_TEST_CASE( esqc_example_solver ){
     Eigen::MatrixXd evecs_ex (5, 1);
     evecs_ex << 0.994, -0.083, -0.042, -0.042, -0.042;
 
-    std::cout << "evals ex" << std::endl << evals_ex << std::endl << std::endl;
-    std::cout << "evecs ex" << std::endl << evecs_ex << std::endl << std::endl;
 
     // Solve using the Davidson diagonalization
     unsigned r = 1;
@@ -73,8 +71,6 @@ BOOST_AUTO_TEST_CASE( esqc_example_solver ){
     auto evals_d = ds.eigenvalues();
     auto evecs_d = ds.eigenvectors();
 
-    std::cout << "evals d" << std::endl << evals_d << std::endl << std::endl;
-    std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
 
     // Test if the example solutions are equal to the Davidson solutions
     BOOST_CHECK(are_equal_evals(evals_d, evals_ex, tol));
@@ -104,8 +100,6 @@ BOOST_AUTO_TEST_CASE( bigger_example_three ) {
     Eigen::MatrixXd all_evecs = saes.eigenvectors();
     Eigen::MatrixXd evecs_ex = all_evecs.topLeftCorner(dim, 3);
 
-    std::cout << "evals ex" << std::endl << evals_ex << std::endl << std::endl;
-    std::cout << "evecs ex" << std::endl << evecs_ex << std::endl << std::endl;
 
     // Now we have to test if my Davidson solver gives the same results
     unsigned r = 3;
@@ -116,8 +110,6 @@ BOOST_AUTO_TEST_CASE( bigger_example_three ) {
     Eigen::VectorXd evals_d = ds.eigenvalues();
     Eigen::MatrixXd evecs_d = ds.eigenvectors();
 
-    std::cout << "evals d" << std::endl << evals_d << std::endl << std::endl;
-    std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
 
     BOOST_CHECK(are_equal_evals(evals_d, evals_ex, tol));
     BOOST_CHECK(are_equal_evecs(evecs_d, evecs_ex, tol));
@@ -146,8 +138,6 @@ BOOST_AUTO_TEST_CASE( liu_example ){
     Eigen::MatrixXd all_evecs = saes.eigenvectors();
     Eigen::MatrixXd evecs_ex = all_evecs.topLeftCorner(N, 4);
 
-    std::cout << "evals ex" << std::endl << evals_ex << std::endl << std::endl;
-    std::cout << "evecs ex" << std::endl << evecs_ex << std::endl << std::endl;
 
     // Solve using the Davidson diagonalization
     unsigned r = 4;
@@ -157,8 +147,6 @@ BOOST_AUTO_TEST_CASE( liu_example ){
     auto evals_d = ds.eigenvalues();
     auto evecs_d = ds.eigenvectors();
 
-    std::cout << "evals d" << std::endl << evals_d << std::endl << std::endl;
-    std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
 
     // Test if the example solutions are equal to the Davidson solutions
     BOOST_CHECK(are_equal_evals(evals_d, evals_ex, tol));
@@ -188,8 +176,6 @@ BOOST_AUTO_TEST_CASE( liu_big ){
     Eigen::MatrixXd all_evecs = saes.eigenvectors();
     Eigen::MatrixXd evecs_ex = all_evecs.topLeftCorner(N, 4);
 
-    std::cout << "evals ex" << std::endl << evals_ex << std::endl << std::endl;
-    std::cout << "evecs ex" << std::endl << evecs_ex << std::endl << std::endl;
 
     // Solve using the Davidson diagonalization
     unsigned r = 4;
@@ -199,8 +185,6 @@ BOOST_AUTO_TEST_CASE( liu_big ){
     auto evals_d = ds.eigenvalues();
     auto evecs_d = ds.eigenvectors();
 
-    std::cout << "evals d" << std::endl << evals_d << std::endl << std::endl;
-    std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
 
     // Test if the example solutions are equal to the Davidson solutions
     BOOST_CHECK(are_equal_evals(evals_d, evals_ex, tol));

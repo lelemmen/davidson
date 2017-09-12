@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE( esqc_example_solver ){
     std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
 
     // Test if the example solutions are equal to the Davidson solutions
-    BOOST_CHECK(are_equal_evals(eval_d, eval_ex, tol));
-    BOOST_CHECK(are_equal_evecs(evec_d, evec_ex, tol));
+    BOOST_CHECK(are_equal_evals(evals_d, evals_ex, tol));
+    BOOST_CHECK(are_equal_evecs(evecs_d, evecs_ex, tol));
 }
 
 
@@ -161,6 +161,6 @@ BOOST_AUTO_TEST_CASE( liu_example ){
     std::cout << "evecs d" << std::endl << evecs_d << std::endl << std::endl;
 
     // Test if the example solutions are equal to the Davidson solutions
-    BOOST_CHECK(are_equal_evals(eval_d, evals_ex, tol));
-    BOOST_CHECK(are_equal_evecs(evec_d, evecs_ex, tol));
+    BOOST_CHECK(are_equal_evals(evals_d, evals_ex, tol));
+    BOOST_CHECK(are_equal_evecs(evecs_d, evecs_ex, tol));
 }

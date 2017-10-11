@@ -1,11 +1,9 @@
-#define BOOST_ALL_DYN_LINK
-
 #define BOOST_TEST_MODULE "Davidson diagonalization"
 
 #include <boost/test/unit_test.hpp>
-#include <boost/test/included/unit_test.hpp>  // include this to get main(), otherwise clang++ will complain
-#include <Eigen/Eigenvalues>
+#include <boost/test/included/unit_test.hpp>  // include this to get main(), otherwise the C++ compiler will complain
 #include "davidson.hpp"
+
 
 /** Check if two sets of eigenvalues are equal
  */
